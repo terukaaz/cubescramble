@@ -87,23 +87,7 @@ class Game:
 
         self.formatted_time = self.format_time(self.time_10ms)
 
-        if self.ready > 0:
-            screen.blit(self.big_font.render(self.formatted_time, True, (255, 0, 0) if self.ready < 20 else (0, 255, 0)),
-                        (screen.get_size()[0] / 2 - self.big_font.size(self.formatted_time)[0] / 2 - 10,
-                         screen.get_size()[1] / 2 - self.big_font.size(self.formatted_time)[1] / 2))
-        else:
-
-            if self.started:
-
-                display_time = self.format_time_custom(self.time_10ms)
-
-                screen.blit(self.big_font.render(display_time, True, (255, 255, 255)),
-                            (screen.get_size()[0] / 2 - self.big_font.size(display_time)[0] / 2 - 10,
-                             screen.get_size()[1] / 2 - self.big_font.size(display_time)[1] / 2))
-            else:
-
-                screen.blit(
-                    self.big_font.render(self.formatted_time, True, (255, 255, 255)),
+        screen.blit(self.big_font.render(self.formatted_time, True, (255, 255, 255) if self.ready <= 0 else ((255, 0, 0) if 0 < self.ready < 18 else (0, 255, 0))),
                     (screen.get_size()[0] / 2 - self.big_font.size(self.formatted_time)[0] / 2 - 10,
                      screen.get_size()[1] / 2 - self.big_font.size(self.formatted_time)[1] / 2))
 
@@ -115,36 +99,33 @@ class Game:
     def format_time(self, time_10ms):
         ms_datetime = datetime.datetime.fromtimestamp(time_10ms / 100.0) - datetime.timedelta(hours=1)  # very weird
 
-        if time_10ms < 1000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
-        elif 1000 < time_10ms < 6000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
-        elif 6000 < time_10ms < 60000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
-        elif 60000 < time_10ms < 360000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
-        elif 36000 < time_10ms:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S.%f")[:-4][1:]
+        if self.started:
+            if time_10ms < 1000:
+                formatted_time = datetime.datetime.strftime(ms_datetime, "%S")[1:]
+            elif 1000 < time_10ms < 6000:
+                formatted_time = datetime.datetime.strftime(ms_datetime, "%S")
+            elif 6000 < time_10ms < 60000:
+                formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S")[1:]
+            elif 60000 < time_10ms < 360000:
+                formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S")
+            elif 36000 < time_10ms:
+                formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S")[1:]
+            else:
+                formatted_time = "?!"
         else:
-            formatted_time = "?!"
 
-        return formatted_time
-
-    def format_time_custom(self, time_10ms):
-        ms_datetime = datetime.datetime.fromtimestamp(time_10ms / 100.0) - datetime.timedelta(hours=1)
-
-        if time_10ms < 1000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%S")[1:]
-        elif 1000 < time_10ms < 6000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%S")
-        elif 6000 < time_10ms < 60000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S")[1:]
-        elif 60000 < time_10ms < 360000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S")
-        elif 36000 < time_10ms:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S")[1:]
-        else:
-            formatted_time = "?!"
+            if time_10ms < 1000:
+                formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
+            elif 1000 < time_10ms < 6000:
+                formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
+            elif 6000 < time_10ms < 60000:
+                formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
+            elif 60000 < time_10ms < 360000:
+                formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
+            elif 36000 < time_10ms:
+                formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S.%f")[:-4][1:]
+            else:
+                formatted_time = "?!"
 
         return formatted_time
 
