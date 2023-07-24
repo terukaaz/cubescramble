@@ -1,4 +1,6 @@
 import datetime
+import json
+import os
 import pygame
 
 import fileutils
@@ -24,6 +26,7 @@ class Game:
 
         self.auto_refresh = True
 
+        self.load_config()
         self.refresh()
 
     def refresh(self):
@@ -89,9 +92,20 @@ class Game:
                         (screen.get_size()[0] / 2 - self.big_font.size(self.formatted_time)[0] / 2 - 10,
                          screen.get_size()[1] / 2 - self.big_font.size(self.formatted_time)[1] / 2))
         else:
-            screen.blit(self.big_font.render(self.formatted_time, True, (255, 255, 255)),
-                        (screen.get_size()[0] / 2 - self.big_font.size(self.formatted_time)[0] / 2 - 10,
-                         screen.get_size()[1] / 2 - self.big_font.size(self.formatted_time)[1] / 2))
+
+            if self.started:
+
+                display_time = self.format_time_custom(self.time_10ms)
+
+                screen.blit(self.big_font.render(display_time, True, (255, 255, 255)),
+                            (screen.get_size()[0] / 2 - self.big_font.size(display_time)[0] / 2 - 10,
+                             screen.get_size()[1] / 2 - self.big_font.size(display_time)[1] / 2))
+            else:
+
+                screen.blit(
+                    self.big_font.render(self.formatted_time, True, (255, 255, 255)),
+                    (screen.get_size()[0] / 2 - self.big_font.size(self.formatted_time)[0] / 2 - 10,
+                     screen.get_size()[1] / 2 - self.big_font.size(self.formatted_time)[1] / 2))
 
         pygame.display.update()
 
@@ -115,3 +129,57 @@ class Game:
             formatted_time = "?!"
 
         return formatted_time
+
+    def format_time_custom(self, time_10ms):
+        ms_datetime = datetime.datetime.fromtimestamp(time_10ms / 100.0) - datetime.timedelta(hours=1)
+
+        if time_10ms < 1000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%S")[1:]
+        elif 1000 < time_10ms < 6000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%S")
+        elif 6000 < time_10ms < 60000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S")[1:]
+        elif 60000 < time_10ms < 360000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S")
+        elif 36000 < time_10ms:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S")[1:]
+        else:
+            formatted_time = "?!"
+
+        return formatted_time
+
+    def save_config(self):
+
+        filename = "config.json"
+
+        with open(filename, 'w') as file:
+            json.dump({
+                "config": {
+                    "puzzle": self.current_puzzle,
+                    "auto_refresh": self.auto_refresh
+                }
+            }, file)
+
+    def load_config(self):
+
+        filename = "config.json"
+
+        if filename not in os.listdir('.'):
+            with open(filename, 'w') as file:
+                json.dump({
+                    "config": {
+                        "puzzle": self.current_puzzle,
+                        "auto_refresh": self.auto_refresh
+                    }
+                }, file)
+                return
+
+        with open(filename, "r") as file:
+            try:
+                data: dict = json.load(file)
+
+                self.current_puzzle = data["config"]["puzzle"]
+                self.auto_refresh = data["config"]["auto_refresh"]
+
+            except json.decoder.JSONDecodeError as e:
+                print(repr(e))
