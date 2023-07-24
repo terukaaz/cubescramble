@@ -22,6 +22,8 @@ class Game:
         self.ready = 0
         self.time_10ms = 0
 
+        self.auto_refresh = True
+
         self.refresh()
 
     def refresh(self):
@@ -49,14 +51,18 @@ class Game:
 
                 if event.key == pygame.K_SPACE:
                     if self.started:
-                        fileutils.write_history(f"1.cth", self.formatted_time, self.current_scramble)
                         self.started = False # to stop the timer
+
+                        fileutils.write_history(f"1.cth", self.formatted_time, self.current_scramble) # save
+
+                        if self.auto_refresh:
+                            self.refresh()
 
         if not self.started:
             if pygame.key.get_pressed()[pygame.K_SPACE]:
                 self.ready += 1
             else:
-                if self.ready >= 20: # start the timer
+                if self.ready >= 18: # start the timer
                     self.time_10ms = 0
                     self.started = True
 
@@ -76,20 +82,7 @@ class Game:
         if not self.started and self.ready <= 0:
             self.draw_text(self.current_scramble, (255, 255, 255), (10, 10))  # draw scramble on idle
 
-        ms_datetime = datetime.datetime.fromtimestamp(self.time_10ms / 100.0) - datetime.timedelta(hours=1) # very weird
-
-        if self.time_10ms < 1000:
-            self.formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
-        elif 1000 < self.time_10ms < 6000:
-            self.formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
-        elif 6000 < self.time_10ms < 60000:
-            self.formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
-        elif 60000 < self.time_10ms < 360000:
-            self.formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
-        elif 36000 < self.time_10ms:
-            self.formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S.%f")[:-4][1:]
-        else:
-            self.formatted_time = "?!"
+        self.formatted_time = self.format_time(self.time_10ms)
 
         if self.ready > 0:
             screen.blit(self.big_font.render(self.formatted_time, True, (255, 0, 0) if self.ready < 20 else (0, 255, 0)),
@@ -104,3 +97,21 @@ class Game:
 
     def draw_text(self, text, color, coords):
         self.screen.blit(self.font.render(text, True, color), coords)
+
+    def format_time(self, time_10ms):
+        ms_datetime = datetime.datetime.fromtimestamp(time_10ms / 100.0) - datetime.timedelta(hours=1)  # very weird
+
+        if time_10ms < 1000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
+        elif 1000 < time_10ms < 6000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
+        elif 6000 < time_10ms < 60000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
+        elif 60000 < time_10ms < 360000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
+        elif 36000 < time_10ms:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S.%f")[:-4][1:]
+        else:
+            formatted_time = "?!"
+
+        return formatted_time
