@@ -1,7 +1,7 @@
 import datetime
-
 import pygame
 
+import fileutils
 from scramblegenerator import clock
 
 class Game:
@@ -16,10 +16,13 @@ class Game:
         self.current_scramble = ""
         self.current_puzzle = "clock"
 
+        self.formatted_time = ""
+
         self.started = False
         self.ready = 0
         self.time_10ms = 0
 
+        self.refresh()
 
     def refresh(self):
 
@@ -41,10 +44,12 @@ class Game:
                     return
 
                 if event.key == pygame.K_r:
-                    self.refresh()
+                    if not self.started: # avoid refreshing scrambles while timer is active
+                        self.refresh()
 
                 if event.key == pygame.K_SPACE:
                     if self.started:
+                        fileutils.write_history(f"1.cth", self.formatted_time, self.current_scramble)
                         self.started = False # to stop the timer
 
         if not self.started:
@@ -52,7 +57,7 @@ class Game:
                 self.ready += 1
             else:
                 if self.ready >= 20: # start the timer
-                    self.time_ms = 0
+                    self.time_10ms = 0
                     self.started = True
 
                 self.ready = 0
@@ -68,26 +73,32 @@ class Game:
         screen = self.screen
         screen.fill((0, 0, 0))
 
-        self.draw_text(self.current_scramble, (255, 255, 255), (10, 10))
+        if not self.started and self.ready <= 0:
+            self.draw_text(self.current_scramble, (255, 255, 255), (10, 10))  # draw scramble on idle
 
-        ms_datetime = datetime.datetime.fromtimestamp(self.time_10ms / 100.0)
+        ms_datetime = datetime.datetime.fromtimestamp(self.time_10ms / 100.0) - datetime.timedelta(hours=1) # very weird
 
         if self.time_10ms < 1000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
+            self.formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
         elif 1000 < self.time_10ms < 6000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
-        elif 6000 < self.time_10ms < 10000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
-        elif self.time_10ms > 10000:
-            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
+            self.formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
+        elif 6000 < self.time_10ms < 60000:
+            self.formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
+        elif 60000 < self.time_10ms < 360000:
+            self.formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
+        elif 36000 < self.time_10ms:
+            self.formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S.%f")[:-4][1:]
         else:
-            formatted_time = ""
+            self.formatted_time = "?!"
 
-
-        print(ms_datetime)
-        print(formatted_time)
-        screen.blit(self.big_font.render(formatted_time, True, (255, 255, 255)), (screen.get_size()[0] / 2 - self.big_font.size(formatted_time)[0] / 2, screen.get_size()[1] / 2 - self.big_font.size(formatted_time)[1] / 2))
-
+        if self.ready > 0:
+            screen.blit(self.big_font.render(self.formatted_time, True, (255, 0, 0) if self.ready < 20 else (0, 255, 0)),
+                        (screen.get_size()[0] / 2 - self.big_font.size(self.formatted_time)[0] / 2 - 10,
+                         screen.get_size()[1] / 2 - self.big_font.size(self.formatted_time)[1] / 2))
+        else:
+            screen.blit(self.big_font.render(self.formatted_time, True, (255, 255, 255)),
+                        (screen.get_size()[0] / 2 - self.big_font.size(self.formatted_time)[0] / 2 - 10,
+                         screen.get_size()[1] / 2 - self.big_font.size(self.formatted_time)[1] / 2))
 
         pygame.display.update()
 
