@@ -18,7 +18,8 @@ class Game:
         self.current_scramble = ""
         self.current_puzzle = "clock"
 
-        self.formatted_time = ""
+        self.formatted_display_time = ""
+        self.last_time = ""
 
         self.started = False
         self.ready = 0
@@ -33,6 +34,8 @@ class Game:
 
         if self.current_puzzle == "clock":
             self.current_scramble = clock.get_scramble()
+
+        print(fileutils.get_aon("1.cth"))
 
     def update(self):
 
@@ -54,9 +57,10 @@ class Game:
 
                 if event.key == pygame.K_SPACE:
                     if self.started:
+
                         self.started = False # to stop the timer
 
-                        fileutils.write_history(f"1.cth", self.formatted_time, self.current_scramble) # save
+                        fileutils.write_history(f"1.cth", self.format_time_common(self.time_10ms), self.current_scramble)  # save
 
                         if self.auto_refresh:
                             self.refresh()
@@ -85,49 +89,67 @@ class Game:
         if not self.started and self.ready <= 0:
             self.draw_text(self.current_scramble, (255, 255, 255), (10, 10))  # draw scramble on idle
 
-        self.formatted_time = self.format_time(self.time_10ms)
+        self.formatted_display_time = self.format_time_for_timer(self.time_10ms)
 
-        screen.blit(self.big_font.render(self.formatted_time, True, (255, 255, 255) if self.ready <= 0 else ((255, 0, 0) if 0 < self.ready < 18 else (0, 255, 0))),
-                    (screen.get_size()[0] / 2 - self.big_font.size(self.formatted_time)[0] / 2 - 10,
-                     screen.get_size()[1] / 2 - self.big_font.size(self.formatted_time)[1] / 2))
+        screen.blit(self.big_font.render(self.formatted_display_time, True, (255, 255, 255) if self.ready <= 0 else ((255, 0, 0) if 0 < self.ready < 18 else (0, 255, 0))),
+                    (screen.get_size()[0] / 2 - self.big_font.size(self.formatted_display_time)[0] / 2 - 10,
+                     screen.get_size()[1] / 2 - self.big_font.size(self.formatted_display_time)[1] / 2))
 
         pygame.display.update()
 
     def draw_text(self, text, color, coords):
         self.screen.blit(self.font.render(text, True, color), coords)
 
-    def format_time(self, time_10ms):
-        ms_datetime = datetime.datetime.fromtimestamp(time_10ms / 100.0) - datetime.timedelta(hours=1)  # very weird
+    def format_time_common(self, time_10ms):
+        ms_datetime = datetime.datetime.fromtimestamp(time_10ms / 100.0).replace(hour=0)  # very weird
+
+        if time_10ms < 1000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
+        elif 1000 < time_10ms < 6000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
+        elif 6000 < time_10ms < 60000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
+        elif 60000 < time_10ms < 360000:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
+        elif 36000 < time_10ms:
+            formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S.%f")[:-4][1:]
+        else:
+            formatted_time = "?!"
+
+        return formatted_time
+
+    def format_time_for_timer(self, time_10ms):
+        ms_datetime = datetime.datetime.fromtimestamp(time_10ms / 100.0).replace(hour=0)
 
         if self.started:
             if time_10ms < 1000:
-                formatted_time = datetime.datetime.strftime(ms_datetime, "%S")[1:]
+                formatted_display_time = datetime.datetime.strftime(ms_datetime, "%S")[1:]
             elif 1000 < time_10ms < 6000:
-                formatted_time = datetime.datetime.strftime(ms_datetime, "%S")
+                formatted_display_time = datetime.datetime.strftime(ms_datetime, "%S")
             elif 6000 < time_10ms < 60000:
-                formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S")[1:]
+                formatted_display_time = datetime.datetime.strftime(ms_datetime, "%M:%S")[1:]
             elif 60000 < time_10ms < 360000:
-                formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S")
+                formatted_display_time = datetime.datetime.strftime(ms_datetime, "%M:%S")
             elif 36000 < time_10ms:
-                formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S")[1:]
+                formatted_display_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S")[1:]
             else:
-                formatted_time = "?!"
+                formatted_display_time = "?!"
         else:
 
             if time_10ms < 1000:
-                formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
+                formatted_display_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
             elif 1000 < time_10ms < 6000:
-                formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
+                formatted_display_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
             elif 6000 < time_10ms < 60000:
-                formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
+                formatted_display_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
             elif 60000 < time_10ms < 360000:
-                formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
+                formatted_display_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
             elif 36000 < time_10ms:
-                formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S.%f")[:-4][1:]
+                formatted_display_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S.%f")[:-4][1:]
             else:
-                formatted_time = "?!"
+                formatted_display_time = "?!"
 
-        return formatted_time
+        return formatted_display_time
 
     def save_config(self):
 

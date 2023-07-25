@@ -43,7 +43,7 @@ while run:
     run = game.run
 
     clock.tick(60)
-    game.draw()
     game.update()
+    game.draw()
 
 pygame.quit()
