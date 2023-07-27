@@ -1,6 +1,6 @@
 import datetime
 import os
-import time
+from functools import reduce
 
 
 def write_history(file, time: str, scramble: str, comment="", penalty="none"):
@@ -39,10 +39,29 @@ def get_aon(file, n=5):
         time_list = []
 
         for i in range(n):
-            time_list.append((content[content.__len__() + i - 5].split(". ")[1]).split(",")[0])
+            time_list.append((content[content.__len__() + i - n].split(". ")[1]).split(",")[0])
 
-        time_list.remove(min(time_list))
-        time_list.remove(max(time_list))
+        # this code sucks
+        time_list_in_seconds = []
+
+        for t in range(time_list.__len__()):
+            time_list_in_seconds.append((t, time_to_seconds(time_list[t]), time_list[t]))
+
+        current_maximum = (0, 0, "")
+        current_minimum = (0, 0, "")
+
+        for j in range(time_list_in_seconds.__len__()):
+            if time_list_in_seconds[j][1] > current_maximum[1]:
+                current_maximum = time_list_in_seconds[j]
+
+            if j == 0:
+                current_minimum = time_list_in_seconds[j]
+            else:
+                if time_list_in_seconds[j][1] < current_minimum[1]:
+                    current_minimum = time_list_in_seconds[j]
+
+        time_list.remove(current_minimum[2])
+        time_list.remove(current_maximum[2])
 
         return average_time(time_list)
 
@@ -68,7 +87,7 @@ def time_to_seconds(time_str):
 
 
 # ChatGPT moment.. hahaha
-def average_time(time_list, decimal_places=2):
+def average_time(time_list, roundv=1):
     # Convert all time values to seconds
     time_in_seconds = [time_to_seconds(time) for time in time_list]
 
@@ -83,7 +102,7 @@ def average_time(time_list, decimal_places=2):
         average_seconds, average_milliseconds = divmod(remainder_seconds, 1)
         average_milliseconds *= 1000
 
-        return f"{int(average_hours):02d}:{int(average_minutes):02d}:{int(average_seconds):02d}.{int(round(average_milliseconds, decimal_places)):03d}"[:-1]
+        return f"{int(average_hours):02d}:{int(average_minutes):02d}:{int(average_seconds):02d}.{int(round(average_milliseconds, -roundv + 1))}"
     elif average_seconds >= 3600:
         # Format: H:MM:SS.ms
         average_minutes, remainder_seconds = divmod(average_seconds, 60)
@@ -91,30 +110,30 @@ def average_time(time_list, decimal_places=2):
         average_seconds, average_milliseconds = divmod(remainder_seconds, 1)
         average_milliseconds *= 1000
 
-        return f"{int(average_hours)}:{int(average_minutes):02d}:{int(average_seconds):02d}.{int(round(average_milliseconds, decimal_places)):03d}"[:-1]
+        return f"{int(average_hours)}:{int(average_minutes):02d}:{int(average_seconds):02d}.{int(round(average_milliseconds, -roundv + 1))}"
     elif average_seconds >= 600:
         # Format: HH:MM:SS.ms
         average_minutes, remainder_seconds = divmod(average_seconds, 60)
         average_seconds, average_milliseconds = divmod(remainder_seconds, 1)
         average_milliseconds *= 1000
 
-        return f"{int(average_minutes):02d}:{int(average_seconds):02d}.{int(round(average_milliseconds, decimal_places)):03d}"[:-1]
+        return f"{int(average_minutes):02d}:{int(average_seconds):02d}.{int(round(average_milliseconds, -roundv + 1))}"
     elif average_seconds >= 60:
         # Format: M:SS.ms
         average_minutes, remainder_seconds = divmod(average_seconds, 60)
         average_seconds, average_milliseconds = divmod(remainder_seconds, 1)
         average_milliseconds *= 1000
 
-        return f"{int(average_minutes)}:{int(average_seconds):02d}.{int(round(average_milliseconds, decimal_places)):03d}"[:-1]
+        return f"{int(average_minutes)}:{int(average_seconds):02d}.{int(round(average_milliseconds, -roundv + 1))}"
     elif average_seconds >= 10:
         # Format: MM:SS.ms
         average_seconds, average_milliseconds = divmod(average_seconds, 1)
         average_milliseconds *= 1000
 
-        return f"{int(average_seconds):02d}.{int(round(average_milliseconds, decimal_places)):03d}"[:-1]
+        return f"{int(average_seconds):02d}.{int(round(average_milliseconds, -roundv + 1))}"
     else:
         # Format: S.ms
         average_seconds, average_milliseconds = divmod(average_seconds, 1)
         average_milliseconds *= 1000
 
-        return f"{int(average_seconds)}.{int(round(average_milliseconds, decimal_places)):03d}"[:-1]
+        return f"{int(average_seconds)}.{int(round(average_milliseconds, -roundv + 1))}"

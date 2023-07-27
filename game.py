@@ -27,6 +27,8 @@ class Game:
 
         self.auto_refresh = True
 
+        self.history_file = "1.cth"
+
         self.load_config()
         self.refresh()
 
@@ -34,8 +36,6 @@ class Game:
 
         if self.current_puzzle == "clock":
             self.current_scramble = clock.get_scramble()
-
-        print(fileutils.get_aon("1.cth"))
 
     def update(self):
 
@@ -60,7 +60,7 @@ class Game:
 
                         self.started = False # to stop the timer
 
-                        fileutils.write_history(f"1.cth", self.format_time_common(self.time_10ms), self.current_scramble)  # save
+                        fileutils.write_history(self.history_file, self.format_time_common(self.time_10ms), self.current_scramble)  # save
 
                         if self.auto_refresh:
                             self.refresh()
@@ -88,6 +88,9 @@ class Game:
 
         if not self.started and self.ready <= 0:
             self.draw_text(self.current_scramble, (255, 255, 255), (10, 10))  # draw scramble on idle
+
+            self.draw_text(f"ao5: {fileutils.get_aon(self.history_file)}", (255, 255, 255), (5, screen.get_size()[1] - 50)) # get average of 5
+            self.draw_text(f"ao12: {fileutils.get_aon(self.history_file, 12)}", (255, 255, 255), (5, screen.get_size()[1] - 100))
 
         self.formatted_display_time = self.format_time_for_timer(self.time_10ms)
 
@@ -124,13 +127,13 @@ class Game:
         if self.started:
             if time_10ms < 1000:
                 formatted_display_time = datetime.datetime.strftime(ms_datetime, "%S")[1:]
-            elif 1000 < time_10ms < 6000:
+            elif 1000 <= time_10ms < 6000:
                 formatted_display_time = datetime.datetime.strftime(ms_datetime, "%S")
-            elif 6000 < time_10ms < 60000:
+            elif 6000 <= time_10ms < 60000:
                 formatted_display_time = datetime.datetime.strftime(ms_datetime, "%M:%S")[1:]
-            elif 60000 < time_10ms < 360000:
+            elif 60000 <= time_10ms < 360000:
                 formatted_display_time = datetime.datetime.strftime(ms_datetime, "%M:%S")
-            elif 36000 < time_10ms:
+            elif 36000 <= time_10ms:
                 formatted_display_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S")[1:]
             else:
                 formatted_display_time = "?!"
@@ -138,13 +141,13 @@ class Game:
 
             if time_10ms < 1000:
                 formatted_display_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
-            elif 1000 < time_10ms < 6000:
+            elif 1000 <= time_10ms < 6000:
                 formatted_display_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
-            elif 6000 < time_10ms < 60000:
+            elif 6000 <= time_10ms < 60000:
                 formatted_display_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
-            elif 60000 < time_10ms < 360000:
+            elif 60000 <= time_10ms < 360000:
                 formatted_display_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
-            elif 36000 < time_10ms:
+            elif 36000 <= time_10ms:
                 formatted_display_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S.%f")[:-4][1:]
             else:
                 formatted_display_time = "?!"
