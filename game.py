@@ -108,13 +108,13 @@ class Game:
 
         if time_10ms < 1000:
             formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4][1:]
-        elif 1000 < time_10ms < 6000:
+        elif 1000 <= time_10ms < 6000:
             formatted_time = datetime.datetime.strftime(ms_datetime, "%S.%f")[:-4]
-        elif 6000 < time_10ms < 60000:
+        elif 6000 <= time_10ms < 60000:
             formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4][1:]
-        elif 60000 < time_10ms < 360000:
+        elif 60000 <= time_10ms < 360000:
             formatted_time = datetime.datetime.strftime(ms_datetime, "%M:%S.%f")[:-4]
-        elif 36000 < time_10ms:
+        elif 36000 <= time_10ms:
             formatted_time = datetime.datetime.strftime(ms_datetime, "%H:%M:%S.%f")[:-4][1:]
         else:
             formatted_time = "?!"
