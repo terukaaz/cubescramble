@@ -89,8 +89,8 @@ class Game:
         if not self.started and self.ready <= 0:
             self.draw_text(self.current_scramble, (255, 255, 255), (10, 10))  # draw scramble on idle
 
-            self.draw_text(f"ao5: {fileutils.get_aon(self.history_file)}", (255, 255, 255), (5, screen.get_size()[1] - 50)) # get average of 5
-            self.draw_text(f"ao12: {fileutils.get_aon(self.history_file, 12)}", (255, 255, 255), (5, screen.get_size()[1] - 100))
+            self.draw_text(f"ao5: {fileutils.get_aon(self.history_file)}", (255, 255, 255), (5, screen.get_size()[1] - 65)) # get average of 5
+            self.draw_text(f"ao12: {fileutils.get_aon(self.history_file, 12)}", (255, 255, 255), (5, screen.get_size()[1] - 40))
 
         self.formatted_display_time = self.format_time_for_timer(self.time_10ms)
 
